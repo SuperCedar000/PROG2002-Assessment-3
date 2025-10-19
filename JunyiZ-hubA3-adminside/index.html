@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html ng-app="adminApp">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin - Charity Events</title>
+
+  <!-- AngularJS -->
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-route.js"></script>
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>Charity Events Admin</h1>
+    <nav>
+      <a href="#!/events">Event List</a> |
+      <a href="#!/add">Add Event</a>
+    </nav>
+  </header>
+
+  <main class="container" ng-cloak>
+    <div ng-view></div>
+  </main>
+
+  <!-- App scripts -->
+  <script src="app.js"></script>
+  <script src="services/apiService.js"></script>
+  <script src="controllers/listController.js"></script>
+  <script src="controllers/addController.js"></script>
+  <script src="controllers/editController.js"></script>
+</body>
+</html>
