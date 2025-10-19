@@ -1,0 +1,23 @@
+<h2>Add Event</h2>
+<form ng-submit="save()">
+  <div>
+    <label>Event Name</label><br>
+    <input ng-model="event.event_name" required />
+  </div>
+  <div>
+    <label>Event Date</label><br>
+    <input type="date" ng-model="event.event_date" required />
+  </div>
+  <div>
+    <label>Location</label><br>
+    <input ng-model="event.location" />
+  </div>
+  <div>
+    <label>Description</label><br>
+    <textarea ng-model="event.description"></textarea>
+  </div>
+  <div>
+   <button type="submit">Save</button>
+    <a href="#!/events">Cancel</a>
+  </div>
+</form>

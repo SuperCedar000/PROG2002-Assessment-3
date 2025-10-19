@@ -1,0 +1,26 @@
+<h2>EventList</h2>
+
+<div ng-if="loading">Loading...</div>
+
+<table ng-if="!loading" class="table">
+  <thead>
+    <tr>
+      <th>Event Name</th>
+      <th>Date</th>
+      <th>Location</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr ng-repeat="ev in events">
+      <td>{{ ev.event_name }}</td>
+      <td>{{ ev.event_date | date:'yyyy-MM-dd' }}</td>
+      <td>{{ ev.location }}</td>
+      <td>
+        <a href="#!/edit/{{ev.event_id}}">Edit</a>
+        &nbsp;|&nbsp;
+        <button ng-click="deleteEvent(ev.event_id)">Delete</button>
+      </td>
+    </tr>
+  </tbody>
+</table>
