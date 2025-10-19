@@ -1,0 +1,108 @@
+<!-- Charity Organizations Introduction -->
+<section class="organisations-section">
+  <div class="container">
+    <h2>Charity Organisations</h2>
+    <div class="organisations-grid">
+      <div class="organisation-card">
+        <h3>Welcome to Our Common Home</h3>
+        <p>Here, every kindness is not in vain, every helping hand is meaningful.</p>
+        <div class="contact-info">Contact: contaxx@redcross.com.au</div>
+      </div>
+      <div class="organisation-card">
+        <h3>Our Mission: Ignite Hope, Pass on Dignity, Reshape the Future.</h3>
+        <p>We are committed to providing sustainable support for the most vulnerable groups - from hungry children to the homeless, from out-of-school youth to disaster-affected families.</p>
+        <div class="contact-info">Contact: inxxo@cancomr.org.au</div>
+      </div>
+      <div class="organisation-card">
+        <h3>Because of You, We Believe Change is Happening.</h3>
+        <p>Every donation, forward, volunteer service, and even a sincere share creates ripples that push the world toward goodness.</p>
+        <div class="contact-info">Contact: enquirs@wwf.com.au</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Activity Management Area -->
+<section class="home-events-section">
+  <div class="container">
+    <h2>Activity management (Click on the card to jump to the details page)</h2>
+    
+    <div class="events-management">
+      <div class="all-events-list">
+        <h3>All activities</h3>
+        <div class="events-list">
+          <div *ngFor="let event of events" class="event-item" (click)="viewEventDetails(event.id)">
+            <div class="event-name">{{ event.name }}</div>
+            <div class="event-actions">
+              <span class="status-btn" [class.status-upcoming]="isUpcoming(event)" 
+                    [class.status-past]="!isUpcoming(event)">
+                {{ isUpcoming(event) ? 'Upcoming' : 'Ended' }}
+              </span>
+              <a class="details-btn">Details</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="categorized-events">
+        <div class="upcoming-events">
+          <h3>Upcoming event</h3>
+          <div class="events-list">
+            <div *ngFor="let event of getUpcomingEvents()" class="event-item" (click)="viewEventDetails(event.id)">
+              <div class="event-name">{{ event.name }}</div>
+              <div class="event-date">{{ formatDate(event.event_date) }}</div>
+            </div>
+            <div *ngIf="getUpcomingEvents().length === 0" class="empty-message">No upcoming events</div>
+          </div>
+        </div>
+
+        <div class="past-events">
+          <h3>The event has ended</h3>
+          <div class="events-list">
+            <div *ngFor="let event of getPastEvents()" class="event-item" (click)="viewEventDetails(event.id)">
+              <div class="event-name">{{ event.name }}</div>
+              <div class="event-date">{{ formatDate(event.event_date) }}</div>
+            </div>
+            <div *ngIf="getPastEvents().length === 0" class="empty-message">No past events</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Platform Data Statistics -->
+<section class="platform-stats-section">
+  <div class="container">
+    <h2>Latest updates</h2>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">💰</div>
+        <div class="stat-number">10.9 billion US dollars</div>
+        <div class="stat-label">Funding amount</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🏢</div>
+        <div class="stat-number">300 enterprises</div>
+        <div class="stat-label">Cumulative cooperative institutions</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📊</div>
+        <div class="stat-number">200</div>
+        <div class="stat-label">Cumulative funded projects</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div *ngIf="getPausedEvents().length > 0" class="paused-events">
+  <h3>Suspended activity (will not be recorded due to policy violation)</h3>
+  <div class="events-list">
+    <div *ngFor="let event of getPausedEvents()" class="event-item paused-event-item" (click)="viewEventDetails(event.id)">
+      <div class="event-name">{{ event.name }}</div>
+      <div class="event-date">{{ formatDate(event.event_date) }}</div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="loading" class="loading">Loading...</div>
