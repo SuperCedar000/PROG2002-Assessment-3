@@ -1,23 +1,77 @@
-app.service('apiService', ['$http', 'API_BASE_URL', function($http, API_BASE_URL) {
-  const base = API_BASE_URL;
+app.factory('apiService', function($http, API_BASE_URL) {
+  const service = {};
 
-  this.getEvents = function() {
-    return $http.get(base);
+  service.getEvents = function() {
+    return $http.get(API_BASE_URL)
+      .then(function(response) {
+        if (response.data && response.data.success) {
+          return response.data.data;
+        } else {
+          return [];
+        }
+      })
+      .catch(function() {
+        return [];
+      });
   };
 
-  this.getEvent = function(id) {
-    return $http.get(base + '/' + id);
+  service.getEventById = function(id) {
+    return $http.get(`${API_BASE_URL}/${id}`)
+      .then(function(response) {
+        if (response.data && response.data.success) {
+          return response.data.data;
+        } else {
+          return null;
+        }
+      })
+      .catch(function() {
+        return null;
+      });
   };
 
-  this.addEvent = function(eventData) {
-    return $http.post(base, eventData);
+  service.addEvent = function(event) {
+    return $http.post(API_BASE_URL, event)
+      .then(function(response) {
+        return response.data;
+      })
+      .catch(function(error) {
+        throw error;
+      });
   };
 
-  this.updateEvent = function(id, eventData) {
-    return $http.put(base + '/' + id, eventData);
+  service.updateEvent = function(id, event) {
+    return $http.put(`${API_BASE_URL}/${id}`, event)
+      .then(function(response) {
+        return response.data;
+      })
+      .catch(function(error) {
+        throw error;
+      });
   };
 
-  this.deleteEvent = function(id) {
-    return $http.delete(base + '/' + id);
+  service.deleteEvent = function(id) {
+    return $http.delete(`${API_BASE_URL}/${id}`)
+      .then(function(response) {
+        return response.data;
+      })
+      .catch(function(error) {
+        throw error;
+      });
   };
-}]);
+
+  service.searchEvents = function(params) {
+    return $http.get(`${API_BASE_URL}/search`, { params })
+      .then(function(response) {
+        if (response.data && response.data.success) {
+          return response.data.data;
+        } else {
+          return [];
+        }
+      })
+      .catch(function() {
+        return [];
+      });
+  };
+
+  return service;
+});

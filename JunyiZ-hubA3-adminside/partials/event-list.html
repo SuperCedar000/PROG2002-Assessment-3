@@ -1,26 +1,30 @@
-<h2>EventList</h2>
+<div class="card">
+  <div class="search-bar">
+    <h2>Event List</h2>
+    <input type="text" ng-model="searchText" placeholder="Search event name..." />
+  </div>
 
-<div ng-if="loading">Loading...</div>
-
-<table ng-if="!loading" class="table">
-  <thead>
-    <tr>
-      <th>Event Name</th>
-      <th>Date</th>
-      <th>Location</th>
-      <th>Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr ng-repeat="ev in events">
-      <td>{{ ev.event_name }}</td>
-      <td>{{ ev.event_date | date:'yyyy-MM-dd' }}</td>
-      <td>{{ ev.location }}</td>
-      <td>
-        <a href="#!/edit/{{ev.event_id}}">Edit</a>
-        &nbsp;|&nbsp;
-        <button ng-click="deleteEvent(ev.event_id)">Delete</button>
-      </td>
-    </tr>
-  </tbody>
-</table>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Event Name</th>
+        <th>Date</th>
+        <th>Location</th>
+        <th>Category</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr ng-repeat="e in events | filter: {name: searchText}">
+        <td>{{e.name}}</td>
+        <td>{{e.date | date:'yyyy-MM-dd'}}</td>
+        <td>{{e.location}}</td>
+        <td>{{e.category_name}}</td>
+        <td>
+          <a class="btn" href="#!/edit/{{e.id}}"><i class="fa fa-pen"></i></a>
+          <button ng-click="deleteEvent(e.id)"><i class="fa fa-trash"></i></button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
