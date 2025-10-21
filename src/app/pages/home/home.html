@@ -1,0 +1,59 @@
+<!-- home.html -->
+<div class="home-container">
+  <div class="home-header">
+    <h1>Charity Events Platform</h1>
+    <p>Discover and participate in meaningful charity events</p>
+  </div>
+
+  <div class="events-section">
+    <h2 class="section-title">Events List</h2>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-state">
+      Loading events data...
+    </div>
+
+    <!-- Error Message -->
+    <div *ngIf="error && !isLoading" class="error-state">
+      {{ error }}
+    </div>
+
+    <!-- Events Table -->
+    <div *ngIf="!isLoading && !error && events.length > 0" class="table-container">
+      <table class="events-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Registrations</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let event of events">
+            <td class="event-id">{{ event.id }}</td>
+            <td class="event-name">{{ event.name }}</td>
+            <td class="event-date">{{ event.event_date | date:'yyyy-MM-dd' }}</td>
+            <td>
+              <span [class]="event.is_active ? 'status-badge status-active' : 'status-badge status-inactive'">
+                {{ event.is_active ? 'Active' : 'Inactive' }}
+              </span>
+            </td>
+            <td class="registration-count">{{ event.registrationCount || 0 }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && !error && events.length === 0" class="empty-state">
+      <h3>No Events Available</h3>
+      <p>There are currently no available events, please check back later</p>
+    </div>
+  </div>
+
+  <div class="navigation">
+    <a href="/manage" class="manage-link">Go to Management Page</a>
+  </div>
+</div>

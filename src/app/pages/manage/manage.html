@@ -1,0 +1,161 @@
+<!-- manage.html -->
+<div class="management-container">
+  <h1>Management - Event Management</h1>
+
+  <!-- Message Display -->
+  <div *ngIf="error" class="error-message">
+    ❌ {{ error }}
+  </div>
+  
+  <div *ngIf="success" class="success-message">
+    ✅ {{ success }}
+  </div>
+
+  <!-- Create/Edit Form -->
+  <div *ngIf="isEditing" class="edit-form">
+    <h2>{{ currentEvent.id ? 'Edit Event' : 'Add New Event' }}</h2>
+    <form (ngSubmit)="saveEvent()" #eventForm="ngForm">
+      
+      <div class="form-group">
+        <label for="name">Event Name: *</label>
+        <input type="text" id="name" name="name" [(ngModel)]="currentEvent.name" required>
+      </div>
+
+      <div class="form-group">
+        <label for="description">Event Description:</label>
+        <textarea id="description" name="description" [(ngModel)]="currentEvent.description" rows="3" placeholder="Enter event description..."></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="event_date">Event Date: *</label>
+          <input type="date" id="event_date" name="event_date" [(ngModel)]="currentEvent.event_date" required>
+        </div>
+
+        <div class="form-group">
+          <label for="event_time">Event Time:</label>
+          <input type="time" id="event_time" name="event_time" [(ngModel)]="currentEvent.event_time">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="location">Event Location: *</label>
+        <input type="text" id="location" name="location" [(ngModel)]="currentEvent.location" required placeholder="e.g., Sydney Opera House">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="category_id">Category: *</label>
+          <select id="category_id" name="category_id" [(ngModel)]="currentEvent.category_id" required>
+            <option value="">Select Category</option>
+            <option *ngFor="let category of categories" [value]="category.id">
+              {{ category.name }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="goal_amount">Goal Amount ($):</label>
+          <input type="number" id="goal_amount" name="goal_amount" [(ngModel)]="currentEvent.goal_amount" min="0" step="0.01">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="current_amount">Current Amount ($):</label>
+          <input type="number" id="current_amount" name="current_amount" [(ngModel)]="currentEvent.current_amount" min="0" step="0.01">
+        </div>
+
+        <div class="form-group">
+          <label for="ticket_price">Ticket Price ($):</label>
+          <input type="number" id="ticket_price" name="ticket_price" [(ngModel)]="currentEvent.ticket_price" min="0" step="0.01">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="image_url">Event Image URL:</label>
+        <input type="url" id="image_url" name="image_url" [(ngModel)]="currentEvent.image_url" placeholder="https://example.com/image.jpg">
+      </div>
+
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input type="checkbox" name="is_active" [(ngModel)]="currentEvent.is_active" [checked]="currentEvent.is_active !== false">
+          Activate Event
+        </label>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">
+          {{ currentEvent.id ? 'Update Event' : 'Create Event' }}
+        </button>
+        <button type="button" (click)="cancelEdit()" class="btn-secondary">
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Events List -->
+  <div *ngIf="!isEditing">
+    <div class="list-header">
+      <h2>Existing Events ({{ events.length }})</h2>
+      <button (click)="initNewEvent()" class="btn-primary">
+        + Add New Event
+      </button>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading">
+      ⏳ Loading events data...
+    </div>
+
+    <!-- Events Table -->
+    <div *ngIf="!isLoading && events.length > 0" class="table-container">
+      <table class="events-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Date</th>
+            <th>Location</th>
+            <th>Status</th>
+            <th>Goal Amount</th>
+            <th>Current Amount</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let event of events">
+            <td>{{ event.id }}</td>
+            <td class="event-name">{{ event.name }}</td>
+            <td>{{ formatDate(event.event_date) }}</td>
+            <td>{{ event.location }}</td>
+            <td>
+              <span [class]="event.is_active ? 'status-active' : 'status-inactive'">
+                {{ getStatusText(event.is_active) }}
+              </span>
+            </td>
+            <td>{{ formatAmount(event.goal_amount) }}</td>
+            <td>{{ formatAmount(event.current_amount) }}</td>
+            <td class="actions">
+              <button (click)="editEvent(event)" class="btn-edit">
+                Edit
+              </button>
+              <button (click)="deleteEvent(event.id, event.name)" class="btn-delete">
+                Delete
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && events.length === 0" class="empty-state">
+      📝 No events data available, click "Add New Event" to create the first event
+    </div>
+  </div>
+
+  <br>
+  <a href="/" class="back-link">← Back to Home</a>
+</div>
