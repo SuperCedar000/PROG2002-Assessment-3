@@ -8,7 +8,7 @@ const dbConfig = {
     database: 'charityevents_db'
 };
 
-// 创建数据库连接池
+// 创建连接池
 const connection = mysql.createPool({
     ...dbConfig,
     waitForConnections: true,
@@ -16,267 +16,155 @@ const connection = mysql.createPool({
     queueLimit: 0
 });
 
-// 测试数据库连接
+// 测试数据库连接（简化版）
 async function testConnection() {
-    try {
-        const [rows] = await connection.execute('SELECT 1 + 1 AS result');
-        console.log('✅ 数据库连接测试成功');
-        return true;
-    } catch (error) {
-        console.error('❌ 数据库连接失败:', error.message);
-        return false;
-    }
+  try {
+    const conn = await connection.getConnection(); // 从连接池获取连接
+    await conn.ping(); // 测试连接
+    conn.release(); // 释放连接
+    console.log('✅ 数据库连接正常');
+    return true;
+  } catch (error) {
+    console.error('❌ 数据库连接失败:', error.message);
+    return false;
+  }
 }
 
-// 获取数据库统计信息
-async function getDatabaseStats() {
-    try {
-        // 获取各表数量
-        const [eventsCount] = await connection.execute('SELECT COUNT(*) as count FROM events');
-        const [categoriesCount] = await connection.execute('SELECT COUNT(*) as count FROM categories');
-        const [organisationsCount] = await connection.execute('SELECT COUNT(*) as count FROM organisations');
-        
-        // 获取活动详情样本
-        const [eventsDetails] = await connection.execute(`
-            SELECT e.id, e.name, e.is_active, c.name as category, o.name as organisation 
-            FROM events e 
-            LEFT JOIN categories c ON e.category_id = c.id 
-            LEFT JOIN organisations o ON e.organisation_id = o.id 
-            ORDER BY e.id LIMIT 5
-        `);
-        
-        return {
-            events_count: eventsCount[0].count,
-            categories_count: categoriesCount[0].count,
-            organisations_count: organisationsCount[0].count,
-            events_details: eventsDetails
-        };
-    } catch (error) {
-        console.error('❌ 获取数据库统计失败:', error);
-        throw error;
-    }
-}
+// =====================
+// 🔹 事件相关功能
+// =====================
 
 // 获取所有活动
 async function getAllEvents() {
-    try {
-        const query = `
-            SELECT e.*, c.name as category_name, o.name as organisation_name 
-            FROM events e 
-            LEFT JOIN categories c ON e.category_id = c.id 
-            LEFT JOIN organisations o ON e.organisation_id = o.id 
-            WHERE e.is_active = TRUE 
-            ORDER BY e.event_date ASC
-        `;
-        
-        const [rows] = await connection.execute(query);
-        console.log(`🔍 getAllEvents查询返回 ${rows.length} 条记录`);
-        return rows;
-    } catch (error) {
-        console.error('❌ 获取所有活动失败:', error);
-        throw error;
-    }
+    const [rows] = await connection.execute(`
+        SELECT e.*, c.name AS category_name, o.name AS organisation_name
+        FROM events e
+        LEFT JOIN categories c ON e.category_id = c.id
+        LEFT JOIN organisations o ON e.organisation_id = o.id
+        WHERE e.is_active = TRUE
+        ORDER BY e.event_date ASC
+    `);
+    return rows;
 }
 
-// 获取所有分类
-async function getAllCategories() {
-    try {
-        const query = 'SELECT * FROM categories ORDER BY name';
-        const [rows] = await connection.execute(query);
-        return rows;
-    } catch (error) {
-        console.error('❌ 获取分类失败:', error);
-        throw error;
-    }
-}
-
-// 根据ID获取单个活动
+// 获取单个活动（含注册信息）
 async function getEventById(eventId) {
-    try {
-        // 再次验证eventId
-        if (isNaN(eventId) || eventId <= 0) {
-            throw new Error('Invalid event ID');
-        }
-        
-        const query = `
-            SELECT e.*, c.name as category_name, o.name as organisation_name 
-            FROM events e 
-            LEFT JOIN categories c ON e.category_id = c.id 
-            LEFT JOIN organisations o ON e.organisation_id = o.id 
-            WHERE e.id = ?
-        `;
-        
-        const [rows] = await connection.execute(query, [eventId]);
-        return rows.length > 0 ? rows[0] : null;
-    } catch (error) {
-        console.error('❌ 获取活动详情失败:', error);
-        throw error;
-    }
-}
+    const [events] = await connection.execute(`
+        SELECT e.*, c.name AS category_name, o.name AS organisation_name
+        FROM events e
+        LEFT JOIN categories c ON e.category_id = c.id
+        LEFT JOIN organisations o ON e.organisation_id = o.id
+        WHERE e.id = ?
+    `, [eventId]);
 
-// 搜索活动 - 简化修复版本
-async function searchEvents(category = null, location = null, keyword = null) {
-    try {
-        console.log('🔍 开始搜索，参数:', { category, location, keyword });
-        
-        let query = `
-            SELECT e.*, c.name as category_name, o.name as organisation_name 
-            FROM events e 
-            LEFT JOIN categories c ON e.category_id = c.id 
-            LEFT JOIN organisations o ON e.organisation_id = o.id 
-            WHERE e.is_active = TRUE
-        `;
-        
-        const params = [];
-        
-        // 分类筛选
-        if (category && category !== '' && !isNaN(category)) {
-            const categoryId = parseInt(category);
-            query += ' AND e.category_id = ?';
-            params.push(categoryId);
-            console.log(`🔍 按分类ID筛选: ${categoryId}`);
-        }
-        
-        // 关键词搜索
-        if (keyword && keyword !== '') {
-            query += ' AND (e.name LIKE ? OR e.description LIKE ? OR e.location LIKE ?)';
-            const likeKeyword = `%${keyword}%`;
-            params.push(likeKeyword, likeKeyword, likeKeyword);
-            console.log(`🔍 按关键词筛选: ${keyword}`);
-        }
-        
-        // 地点筛选
-        if (location && location !== '') {
-            query += ' AND e.location LIKE ?';
-            params.push(`%${location}%`);
-            console.log(`🔍 按地点筛选: ${location}`);
-        }
-        
-        query += ' ORDER BY e.event_date ASC';
-        
-        console.log('🔍 最终查询:', query);
-        console.log('🔍 查询参数:', params);
-        
-        const [rows] = await connection.execute(query, params);
-        console.log(`🔍 搜索返回 ${rows.length} 个活动`);
-        
-        return rows;
-        
-    } catch (error) {
-        console.error('❌ 搜索活动错误:', error);
-        throw error;
-    }
+    if (events.length === 0) return null;
+
+    const [registrations] = await connection.execute(`
+        SELECT id, user_name, email, phone, tickets, registration_date
+        FROM registrations
+        WHERE event_id = ?
+        ORDER BY registration_date DESC
+    `, [eventId]);
+
+    return {
+        ...events[0],
+        registrations
+    };
 }
 
 // 创建新活动
-async function createEvent(eventData) {
-    try {
-        const query = `
-            INSERT INTO events (name, description, event_date, event_time, location, category_id, organisation_id, goal_amount, current_amount, ticket_price, image_url) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `;
-        
-        const params = [
-            eventData.name,
-            eventData.description,
-            eventData.event_date,
-            eventData.event_time,
-            eventData.location,
-            eventData.category_id,
-            eventData.organisation_id,
-            eventData.goal_amount || 0,
-            eventData.current_amount || 0,
-            eventData.ticket_price || 0,
-            eventData.image_url || null
-        ];
-        
-        const [result] = await connection.execute(query, params);
-        return result.insertId;
-    } catch (error) {
-        console.error('❌ 创建活动失败:', error);
-        throw error;
-    }
+async function createEvent(data) {
+    const [result] = await connection.execute(`
+        INSERT INTO events 
+        (name, description, event_date, event_time, location, category_id, organisation_id, goal_amount, current_amount, ticket_price, image_url)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+        data.name, data.description, data.event_date, data.event_time,
+        data.location, data.category_id, data.organisation_id,
+        data.goal_amount || 0, data.current_amount || 0,
+        data.ticket_price || 0, data.image_url || null
+    ]);
+    return result.insertId;
 }
 
 // 更新活动
-async function updateEvent(eventId, eventData) {
-    try {
-        const query = `
-            UPDATE events 
-            SET name = ?, description = ?, event_date = ?, event_time = ?, location = ?, category_id = ?, organisation_id = ?, goal_amount = ?, current_amount = ?, ticket_price = ?, image_url = ?, is_active = ?
-            WHERE id = ?
-        `;
-        
-        const params = [
-            eventData.name,
-            eventData.description,
-            eventData.event_date,
-            eventData.event_time,
-            eventData.location,
-            eventData.category_id,
-            eventData.organisation_id,
-            eventData.goal_amount,
-            eventData.current_amount,
-            eventData.ticket_price,
-            eventData.image_url,
-            eventData.is_active,
-            eventId
-        ];
-        
-        const [result] = await connection.execute(query, params);
-        return result.affectedRows > 0;
-    } catch (error) {
-        console.error('❌ 更新活动失败:', error);
-        throw error;
-    }
+async function updateEvent(eventId, data) {
+    const [result] = await connection.execute(`
+        UPDATE events SET
+            name = ?, description = ?, event_date = ?, event_time = ?, 
+            location = ?, category_id = ?, organisation_id = ?, 
+            goal_amount = ?, current_amount = ?, ticket_price = ?, 
+            image_url = ?, is_active = ?
+        WHERE id = ?
+    `, [
+        data.name, data.description, data.event_date, data.event_time,
+        data.location, data.category_id, data.organisation_id,
+        data.goal_amount, data.current_amount, data.ticket_price,
+        data.image_url, data.is_active ?? true, eventId
+    ]);
+    return result.affectedRows > 0;
 }
 
-// 删除活动
+// 删除活动（仅当无注册）
 async function deleteEvent(eventId) {
-    try {
-        const query = 'DELETE FROM events WHERE id = ?';
-        const [result] = await connection.execute(query, [eventId]);
-        return result.affectedRows > 0;
-    } catch (error) {
-        console.error('❌ 删除活动失败:', error);
-        throw error;
+    const [check] = await connection.execute(
+        'SELECT COUNT(*) AS count FROM registrations WHERE event_id = ?',
+        [eventId]
+    );
+    if (check[0].count > 0) {
+        throw new Error('Cannot delete event with existing registrations');
     }
+
+    const [result] = await connection.execute('DELETE FROM events WHERE id = ?', [eventId]);
+    return result.affectedRows > 0;
 }
 
-// 获取组织列表
-async function getOrganisations() {
-    try {
-        const query = 'SELECT * FROM organisations ORDER BY name';
-        const [rows] = await connection.execute(query);
-        return rows;
-    } catch (error) {
-        console.error('❌ 获取组织列表失败:', error);
-        throw error;
-    }
+// =====================
+// 🔹 注册相关功能
+// =====================
+
+// 获取所有注册
+async function getAllRegistrations() {
+    const [rows] = await connection.execute(`
+        SELECT r.*, e.name AS event_name
+        FROM registrations r
+        LEFT JOIN events e ON r.event_id = e.id
+        ORDER BY r.registration_date DESC
+    `);
+    return rows;
 }
 
-// 关闭数据库连接
-async function closeConnection() {
-    try {
-        await connection.end();
-        console.log('✅ 数据库连接已关闭');
-    } catch (error) {
-        console.error('❌ 关闭数据库连接失败:', error);
+// 新增注册
+async function createRegistration(data) {
+    // 确保一个用户不能重复注册同一活动
+    const [existing] = await connection.execute(`
+        SELECT id FROM registrations 
+        WHERE event_id = ? AND email = ?
+    `, [data.event_id, data.email]);
+    
+    if (existing.length > 0) {
+        throw new Error('User already registered for this event');
     }
+
+    const [result] = await connection.execute(`
+        INSERT INTO registrations (event_id, user_name, email, phone, tickets)
+        VALUES (?, ?, ?, ?, ?)
+    `, [
+        data.event_id, data.user_name, data.email, data.phone, data.tickets || 1
+    ]);
+
+    return result.insertId;
 }
 
-// 导出所有函数和连接
+// 导出模块
 module.exports = {
-    connection, // 导出连接供server.js使用
+    connection,
     testConnection,
-    getDatabaseStats,
     getAllEvents,
-    getAllCategories,
     getEventById,
-    searchEvents,
     createEvent,
     updateEvent,
     deleteEvent,
-    getOrganisations,
-    closeConnection
+    getAllRegistrations,
+    createRegistration
 };

@@ -1,0 +1,52 @@
+<nav class="navbar">
+  <div class="nav-container">
+    <span class="brand-text">Coastal Charity Guardian Platform</span>
+    <div class="nav-links">
+      <a routerLink="/home" routerLinkActive="active" class="nav-link">HOME</a>
+      <a routerLink="/event/1" routerLinkActive="active" class="nav-link">Event Details</a>
+      <a routerLink="/search" routerLinkActive="active" class="nav-link">Search</a>
+      <a routerLink="/register/1" routerLinkActive="active" class="nav-link">Register</a>
+    </div>
+  </div>
+</nav>
+
+<section class="search-page">
+  <div class="container">
+    <h1>Search activity</h1>
+    <p class="search-description">
+      Filter the activities you are interested in through keywords and categories
+    </p>
+
+    <div class="search-controls">
+      <div class="search-input-group">
+        <input [(ngModel)]="keyword" placeholder="Enter the name or location..." class="search-input">
+        <select [(ngModel)]="category" class="search-select">
+          <option value="">ALL</option>
+          <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option>
+        </select>
+        <button (click)="performSearch()" class="search-button">Search</button>
+        <button (click)="clearSearch()" class="clear-button">Clear</button>
+      </div>
+    </div>
+
+    <div class="search-results">
+      <h2>{{ resultsTitle }}</h2>
+      <div class="events-grid">
+        <div *ngFor="let event of events" class="event-card">
+          <div class="event-header">
+            <h3>{{ event.name }}</h3>
+            <span>{{ event.category_name || 'Uncategorized' }}</span>
+          </div>
+          <p><strong>📅 Date:</strong> {{ event.event_date | date }}</p>
+          <p><strong>📍 Location:</strong> {{ event.location }}</p>
+          <p><strong>🏢 Organization:</strong> {{ event.organisation_name || 'Unknown' }}</p>
+          <button (click)="viewEventDetails(event.id)" class="view-details-btn">View Details</button>
+        </div>
+      </div>
+
+      <div *ngIf="!events?.length" class="no-results">
+        <p>No matching activities found</p>
+      </div>
+    </div>
+  </div>
+</section>

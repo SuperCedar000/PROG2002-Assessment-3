@@ -1,0 +1,139 @@
+<div class="register-container">
+  <!-- 修复导航栏 -->
+  <nav class="navbar">
+    <div class="nav-left">🎯 Charity Events</div>
+    <ul class="nav-links">
+      <li><a routerLink="/home">Home</a></li>
+      <li><a routerLink="/event-detail">Event Details</a></li>
+      <li><a routerLink="/search">Search</a></li>
+      <li><a routerLink="/register" class="active">Register</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <div class="register-header">
+      <h1>Register for Charity Event</h1>
+      <p class="subtitle">Join us in making a difference! Register for your preferred charity event below.</p>
+    </div>
+
+    <!-- 事件选择 -->
+    <div class="form-section">
+      <div class="form-group">
+        <label for="eventSelect" class="form-label">Select Event *</label>
+        <select id="eventSelect" [(ngModel)]="formData.event_id" name="event_id" (change)="onEventChange($event)" class="form-control">
+          <option value="">-- Please select an event --</option>
+          <option *ngFor="let event of events" [value]="event.id">
+            {{ event.name }} ({{ event.event_date | date:'mediumDate' }})
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <!-- 事件详情卡片 -->
+    <div *ngIf="selectedEvent" class="event-details-card">
+      <div class="event-details-header">
+        <h2>{{ selectedEvent.name }}</h2>
+        <div class="event-meta">
+          <span class="event-date">📅 {{ selectedEvent.event_date | date:'fullDate' }}</span>
+          <span class="event-location">📍 {{ selectedEvent.location }}</span>
+        </div>
+      </div>
+      
+      <div class="event-details-content">
+        <div class="event-info">
+          <div class="info-row">
+            <span class="info-label">Organisation:</span>
+            <span class="info-value">{{ selectedEvent.organisation_name }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Category:</span>
+            <span class="info-value">{{ selectedEvent.category_name }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Ticket Price:</span>
+            <span class="info-value highlight">${{ selectedEvent.ticket_price || 0 }}</span>
+          </div>
+        </div>
+        
+        <div class="event-description" *ngIf="selectedEvent.description">
+          <h4>About this Event</h4>
+          <p>{{ selectedEvent.description }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 注册表单 -->
+    <form (ngSubmit)="submitRegistration()" #registerForm="ngForm" *ngIf="formData.event_id" class="registration-form">
+      <div class="form-section">
+        <h3>Your Information</h3>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Full Name *</label>
+            <input type="text" [(ngModel)]="formData.user_name" name="user_name" required class="form-control" placeholder="Enter your full name" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Email Address *</label>
+            <input type="email" [(ngModel)]="formData.email" name="email" required class="form-control" placeholder="Enter your email" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Phone Number</label>
+            <input type="tel" [(ngModel)]="formData.phone" name="phone" class="form-control" placeholder="Enter your phone number" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Number of Tickets *</label>
+            <input type="number" [(ngModel)]="formData.tickets" name="tickets" min="1" max="10" class="form-control" />
+            <small class="form-help">Minimum 1 ticket, maximum 10 tickets</small>
+          </div>
+        </div>
+
+        <!-- 费用计算 -->
+        <div *ngIf="selectedEvent" class="cost-calculation">
+          <div class="cost-row">
+            <span>Ticket Price:</span>
+            <span>${{ selectedEvent.ticket_price || 0 }} × {{ formData.tickets }}</span>
+          </div>
+          <div class="cost-total">
+            <span><strong>Total Cost:</strong></span>
+            <span class="total-amount"><strong>${{ ((selectedEvent.ticket_price || 0) * formData.tickets).toFixed(2) }}</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" [disabled]="loading" class="submit-btn">
+          <span *ngIf="!loading">🎟️ Complete Registration</span>
+          <span *ngIf="loading">⏳ Processing...</span>
+        </button>
+        <button type="button" (click)="router.navigate(['/event-detail'])" class="cancel-btn">
+          Cancel
+        </button>
+      </div>
+    </form>
+
+    <!-- 消息显示 -->
+    <div *ngIf="message" class="alert" [class.alert-success]="message.includes('successful')" 
+         [class.alert-danger]="message.includes('failed') || message.includes('Please')">
+      <div class="alert-content">
+        <span class="alert-icon">{{ message.includes('successful') ? '✅' : '❌' }}</span>
+        {{ message }}
+      </div>
+    </div>
+
+    <!-- 没有选择事件时的提示 -->
+    <div *ngIf="!formData.event_id" class="no-event-selected">
+      <div class="prompt-card">
+        <h3>👆 Select an Event to Register</h3>
+        <p>Choose from the dropdown above to view event details and start your registration.</p>
+        <button (click)="router.navigate(['/event-detail'])" class="browse-events-btn">
+          Browse All Events
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,177 @@
+<!-- event-detail.html -->
+<nav class="navbar">
+  <div class="nav-left">🎯 Charity Events</div>
+  <ul class="nav-links">
+    <li><a routerLink="/home">Home</a></li>
+    <li><a routerLink="/event-detail" class="active">Event Details</a></li>
+    <li><a routerLink="/search">Search</a></li>
+    <li><a routerLink="/register">Register</a></li>
+  </ul>
+</nav>
+
+<div class="container">
+  <h1 class="page-title">Event Details(Click on the purple part of the card to display detailed information)</h1>
+
+  <div *ngIf="loading" class="loading">Loading events...</div>
+  <div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
+
+  <!-- 活动列表视图 -->
+  <div *ngIf="!showEventDetail">
+    <div class="grid">
+      <div *ngFor="let event of events" class="card">
+        <div class="card-header" (click)="toggleEventDetails(event.id)">
+  <div class="card-header-content">
+    <h3>{{ event.name }}</h3>
+    <p>{{ event.category_name }}</p>
+  </div>
+  <span class="registration-count" *ngIf="getEventRegistrations(event.id).length > 0">
+    👥 {{ getEventRegistrations(event.id).length }} registered
+  </span>
+</div>
+
+        <div class="card-body">
+          <p><strong>📅 Date:</strong> {{ event.event_date | date: 'longDate' }}</p>
+          <p><strong>🕒 Time:</strong> {{ event.event_time }}</p>
+          <p><strong>📍 Location:</strong> {{ event.location }}</p>
+          <p><strong>🏢 Organisation:</strong> {{ event.organisation_name }}</p>
+        </div>
+
+        <div *ngIf="isExpanded(event.id)" class="card-details">
+          <p><strong>💬 Description:</strong> {{ event.description }}</p>
+          <p><strong>🎯 Goal:</strong> ${{ event.goal_amount }}</p>
+          <p><strong>💰 Raised:</strong> ${{ event.current_amount }}</p>
+          <p><strong>🎫 Ticket:</strong> ${{ event.ticket_price }}</p>
+          
+          <!-- 活动内的注册信息预览 -->
+          <div class="event-registrations-preview" *ngIf="getEventRegistrations(event.id).length > 0">
+            <h4>Recent Registrations</h4>
+            <div class="preview-list">
+              <div *ngFor="let reg of getEventRegistrations(event.id).slice(0, 3)" class="preview-item">
+                <span class="user-name">{{ reg.user_name }}</span>
+                <span class="tickets">{{ reg.tickets }} ticket(s)</span>
+              </div>
+            </div>
+            <p class="view-more" *ngIf="getEventRegistrations(event.id).length > 3">
+              + {{ getEventRegistrations(event.id).length - 3 }} more...
+            </p>
+          </div>
+
+          <div class="action-buttons">
+            <button (click)="registerForEvent(event.id)">Register Now</button>
+            <button (click)="viewEventDetails(event.id)" class="view-details-btn">View Details & Registrations</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== 全局注册信息显示 ========== -->
+    <section class="global-registrations-section" *ngIf="allRegistrations.length > 0">
+      <h2>All Event Registrations</h2>
+      <p class="total-global-registrations">
+        Total registrations across all events: <strong>{{ allRegistrations.length }}</strong>
+      </p>
+
+      <div class="global-registrations-grid">
+        <div *ngFor="let event of events" class="event-registration-card">
+          <div class="event-registration-header">
+            <h3>{{ event.name }}</h3>
+            <span class="event-registration-count">{{ getEventRegistrations(event.id).length }} registrations</span>
+          </div>
+          
+          <div class="event-registration-list" *ngIf="getEventRegistrations(event.id).length > 0">
+            <div *ngFor="let reg of getEventRegistrations(event.id)" class="global-registration-item">
+              <div class="global-registration-info">
+                <strong>{{ reg.user_name }}</strong>
+                <span>{{ reg.tickets }} ticket(s)</span>
+                <small>{{ formatDate(reg.registration_date) }}</small>
+              </div>
+            </div>
+          </div>
+          
+          <div *ngIf="getEventRegistrations(event.id).length === 0" class="no-event-registrations">
+            No registrations yet
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 活动详情视图（包含注册信息） -->
+  <div *ngIf="showEventDetail && selectedEvent" class="event-detail-view">
+    <button (click)="backToEventList()" class="back-button">← Back to Event List</button>
+    
+    <div class="event-detail-layout">
+      <!-- 左侧：活动信息 -->
+      <div class="event-detail-card">
+        <h2>{{ selectedEvent.name }}</h2>
+        <div class="event-info-grid">
+          <div class="info-item">
+            <strong>📅 Date</strong>
+            <span>{{ selectedEvent.event_date | date: 'longDate' }}</span>
+          </div>
+          <div class="info-item">
+            <strong>🕒 Time</strong>
+            <span>{{ selectedEvent.event_time }}</span>
+          </div>
+          <div class="info-item">
+            <strong>📍 Location</strong>
+            <span>{{ selectedEvent.location }}</span>
+          </div>
+          <div class="info-item">
+            <strong>🏢 Organisation</strong>
+            <span>{{ selectedEvent.organisation_name }}</span>
+          </div>
+          <div class="info-item">
+            <strong>📋 Category</strong>
+            <span>{{ selectedEvent.category_name }}</span>
+          </div>
+          <div class="info-item">
+            <strong>🎯 Goal Amount</strong>
+            <span>${{ selectedEvent.goal_amount }}</span>
+          </div>
+          <div class="info-item">
+            <strong>💰 Current Amount</strong>
+            <span>${{ selectedEvent.current_amount }}</span>
+          </div>
+          <div class="info-item">
+            <strong>🎫 Ticket Price</strong>
+            <span>${{ selectedEvent.ticket_price }}</span>
+          </div>
+        </div>
+        
+        <div class="event-description">
+          <strong>💬 Description</strong>
+          <p>{{ selectedEvent.description }}</p>
+        </div>
+
+        <button (click)="registerForEvent(selectedEvent.id)" class="register-btn">Register for this Event</button>
+      </div>
+
+      <!-- 右侧：注册信息 -->
+      <section class="registrations-section">
+        <h3>Event Registrations</h3>
+        <p class="total-registrations">
+          Total registrations: <strong>{{ selectedEvent.registrations?.length || 0 }}</strong>
+        </p>
+
+        <div *ngIf="selectedEvent.registrations && selectedEvent.registrations.length > 0" class="registrations-list">
+          <div *ngFor="let reg of selectedEvent.registrations" class="registration-card">
+            <div class="registration-header">
+              <h4>{{ reg.user_name }}</h4>
+              <span class="registration-date">{{ formatDate(reg.registration_date) }}</span>
+            </div>
+            <div class="registration-details">
+              <p><strong>Email:</strong> {{ reg.email }}</p>
+              <p *ngIf="reg.phone"><strong>Phone:</strong> {{ reg.phone }}</p>
+              <p><strong>Tickets:</strong> {{ reg.tickets }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="!selectedEvent.registrations || selectedEvent.registrations.length === 0" class="no-registrations">
+          <p>No registrations yet for this event. Be the first to register!</p>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>

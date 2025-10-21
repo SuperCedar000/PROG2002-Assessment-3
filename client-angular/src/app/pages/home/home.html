@@ -1,0 +1,105 @@
+<!-- Navigation Bar -->
+<nav class="navbar">
+  <div class="nav-container">
+    <span class="brand-text">Coastal Charity Guardian Platform</span>
+    <div class="nav-links">
+      <a routerLink="/home" routerLinkActive="active" class="nav-link">HOME</a>
+      <a routerLink="/event/1" routerLinkActive="active" class="nav-link">Event Details</a>
+      <a routerLink="/search" routerLinkActive="active" class="nav-link">Search</a>
+      <a routerLink="/register/1" routerLinkActive="active" class="nav-link">Register</a>
+    </div>
+  </div>
+</nav>
+
+
+<!-- Charity Organisations -->
+<section class="organisations-section">
+  <div class="container">
+    <h2>Charity Organisations</h2>
+    <div class="organisations-grid">
+      <div class="organisation-card" *ngFor="let org of organisations">
+        <h3>{{ org.name }}</h3>
+        <p>{{ org.description }}</p>
+        <div class="contact-info">Contact: {{ org.contact }}</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Activity Management -->
+<section class="home-events-section">
+  <div class="container">
+    <h2>Activity Management (Click card to view details)</h2>
+
+    <div class="events-management">
+      <div class="all-events-list">
+        <h3>All Activities</h3>
+        <div class="events-list">
+          <div
+            class="event-item"
+            *ngFor="let event of events"
+            (click)="viewEventDetails(event.id)"
+          >
+            <div class="event-item-header">
+              <h4>{{ event.name }}</h4>
+              <span class="event-status" [ngClass]="getEventStatus(event)">
+                {{ getStatusText(event) }}
+              </span>
+            </div>
+            <p><strong>Date:</strong> {{ event.event_date | date }}</p>
+            <p><strong>Location:</strong> {{ event.location }}</p>
+            <p><strong>Category:</strong> {{ event.category_name || 'Uncategorized' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="categorized-events">
+        <div class="upcoming-events">
+          <h3>Upcoming Events</h3>
+          <div class="events-list">
+            <div
+              class="event-item"
+              *ngFor="let event of upcomingEvents"
+              (click)="viewEventDetails(event.id)"
+            >
+              <h4>{{ event.name }}</h4>
+              <p><strong>Date:</strong> {{ event.event_date | date }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="past-events">
+          <h3>Past Events</h3>
+          <div class="events-list">
+            <div
+              class="event-item"
+              *ngFor="let event of pastEvents"
+              (click)="viewEventDetails(event.id)"
+            >
+              <h4>{{ event.name }}</h4>
+              <p><strong>Date:</strong> {{ event.event_date | date }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Platform Stats -->
+<section class="platform-stats-section">
+  <div class="container">
+    <h2>Latest Updates</h2>
+    <div class="stats-grid">
+      <div class="stat-card" *ngFor="let stat of stats">
+        <div class="stat-icon">{{ stat.icon }}</div>
+        <div class="stat-number">{{ stat.number }}</div>
+        <div class="stat-label">{{ stat.label }}</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Loading Indicator -->
+<div *ngIf="loading" class="loading">Loading...</div>
+<div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
